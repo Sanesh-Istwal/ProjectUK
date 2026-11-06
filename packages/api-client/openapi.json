@@ -1,0 +1,204 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ProjectUK API",
+    "version": "1.0.0",
+    "description": "Modular Monolith API for ProjectUK"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/api/v1",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "API status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "timestamp": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "displayName": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created and authenticated" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Log in with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Log out and clear session cookies",
+        "responses": {
+          "200": { "description": "Logged out" }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "summary": "Get current session user",
+        "responses": {
+          "200": { "description": "Current user payload" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "summary": "Get profile of logged-in user",
+        "responses": {
+          "200": { "description": "Current user full profile" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update profile details",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": { "type": "string" },
+                  "bio": { "type": "string" },
+                  "avatarUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated" },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/users/{id}/role": {
+      "patch": {
+        "summary": "Update user RBAC role (Admin/Moderator)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "type": "string", "enum": ["visitor", "member", "contributor", "moderator", "admin"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Role updated" },
+          "403": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/maps/markers": {
+      "get": {
+        "summary": "Get map markers within viewport",
+        "parameters": [
+          { "name": "minLng", "in": "query", "schema": { "type": "number" }, "required": true },
+          { "name": "minLat", "in": "query", "schema": { "type": "number" }, "required": true },
+          { "name": "maxLng", "in": "query", "schema": { "type": "number" }, "required": true },
+          { "name": "maxLat", "in": "query", "schema": { "type": "number" }, "required": true }
+        ],
+        "responses": {
+          "200": { "description": "List of geo-markers within bounds" }
+        }
+      }
+    },
+    "/content/stories": {
+      "get": {
+        "summary": "List published stories/gallery items",
+        "responses": {
+          "200": { "description": "Published stories list" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "details": { "type": "object" }
+        },
+        "required": ["code", "message"]
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Standard error response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  }
+}
